@@ -32086,6 +32086,10 @@
 
 	var _ToDoContent2 = _interopRequireDefault(_ToDoContent);
 
+	var _ToDoFooter = __webpack_require__(187);
+
+	var _ToDoFooter2 = _interopRequireDefault(_ToDoFooter);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -32103,12 +32107,17 @@
 			var _this = _possibleConstructorReturn(this, (ToDoList.__proto__ || Object.getPrototypeOf(ToDoList)).call(this, props));
 
 			_this.state = {
-				aToDo: []
+				aToDo: [],
+				isChecked: [],
+				isAllChecked: false
 			};
 			return _this;
 		}
 
 		_createClass(ToDoList, [{
+			key: 'componentDidUpdate',
+			value: function componentDidUpdate() {}
+		}, {
 			key: 'addItem',
 			value: function addItem(para) {
 				this.state.aToDo.push(para);
@@ -32119,10 +32128,46 @@
 		}, {
 			key: 'deleteItem',
 			value: function deleteItem(index) {
-				this.state.aToDo.splice(index, 1);
+				this.state.aToDo.splice(index, 1); // 从数组中从index开始删除一个item
 				this.setState({
 					aToDo: this.state.aToDo
 				});
+			}
+		}, {
+			key: 'deleteAll',
+			value: function deleteAll() {
+				this.setState({
+					aToDo: []
+				});
+			}
+		}, {
+			key: 'selectAll',
+			value: function selectAll() {}
+		}, {
+			key: 'selectItem',
+			value: function selectItem(e) {
+				var oTemObj = {
+					id: e.target.id,
+					ischecked: e.target.checked
+				};
+				if (e.target.checked) {
+					this.state.isChecked.push(oTemObj);
+				} else {
+					this.state.isChecked.pop();
+				}
+
+				this.setState({
+					isChecked: this.state.isChecked
+				});
+				if (this.state.aToDo.length == this.state.isChecked.length) {
+					this.setState({
+						isAllChecked: true
+					});
+				} else {
+					this.setState({
+						isAllChecked: false
+					});
+				}
 			}
 		}, {
 			key: 'render',
@@ -32131,7 +32176,11 @@
 					'div',
 					null,
 					_react2.default.createElement(_ToDoHeader2.default, { addItem: this.addItem.bind(this) }),
-					_react2.default.createElement(_ToDoContent2.default, { todos: this.state.aToDo, deleteItem: this.deleteItem.bind(this) })
+					_react2.default.createElement(_ToDoContent2.default, { todos: this.state.aToDo, deleteItem: this.deleteItem.bind(this),
+						selectItem: this.selectItem.bind(this), isDone: this.state.isDone }),
+					_react2.default.createElement(_ToDoFooter2.default, { deleteAll: this.deleteAll.bind(this), selectAll: this.selectAll.bind(this),
+						allNum: this.state.aToDo.length, doneNum: this.state.isChecked.length,
+						isAllChecked: this.state.isAllChecked })
 				);
 			}
 		}]);
@@ -32189,7 +32238,8 @@
 		_createClass(ContentItem, [{
 			key: 'handleClickDelete',
 			value: function handleClickDelete(e) {
-				this.props.deleteItem(this.props.key);
+				this.props.deleteItem(this.props.index);
+				//console.log(e); // 即可将传入参数打印出来
 			}
 			// 鼠标移入事件
 
@@ -32210,21 +32260,33 @@
 		}, {
 			key: 'render',
 			value: function render() {
+				var _this2 = this;
+
 				return _react2.default.createElement(
 					'li',
-					{ onMouseOver: this.handleMouseOver.bind(this), onMouseOut: this.handleMouseOut.bind(this) },
-					_react2.default.createElement('input', { type: 'checkbox' }),
+					{ onMouseOver: function onMouseOver(e) {
+							return _this2.handleMouseOver();
+						}, onMouseOut: this.handleMouseOut.bind(this) },
 					_react2.default.createElement(
-						'span',
+						'label',
 						null,
-						this.props.text
-					),
-					_react2.default.createElement(
-						'button',
-						{ ref: 'delButton', onClick: this.handleClickDelete.bind(this) },
-						'\u5220\u9664'
+						_react2.default.createElement('input', { id: this.props.index, type: 'checkbox', onChange: this.props.selectItem.bind(this),
+							checked: this.props.isDone }),
+						_react2.default.createElement(
+							'span',
+							null,
+							this.props.text
+						),
+						_react2.default.createElement(
+							'button',
+							{ ref: 'delButton', onClick: function onClick(e) {
+									return _this2.handleClickDelete("传入参数");
+								} },
+							'\u5220\u9664'
+						)
 					)
-				);
+				) // 两种函数绑定的方法，1.使用 e => this.functioName(argu) 2. this.functionName.bind(this)
+				;
 			}
 		}]);
 
@@ -32237,18 +32299,18 @@
 		function ToDoContent(props) {
 			_classCallCheck(this, ToDoContent);
 
-			var _this2 = _possibleConstructorReturn(this, (ToDoContent.__proto__ || Object.getPrototypeOf(ToDoContent)).call(this, props));
+			var _this3 = _possibleConstructorReturn(this, (ToDoContent.__proto__ || Object.getPrototypeOf(ToDoContent)).call(this, props));
 
-			_this2.state = {
+			_this3.state = {
 				name: ''
 			};
-			return _this2;
+			return _this3;
 		}
 
 		_createClass(ToDoContent, [{
 			key: 'render',
 			value: function render() {
-				var _this3 = this;
+				var _this4 = this;
 
 				if (this.props.todos.length == 0) {
 					return _react2.default.createElement(
@@ -32262,7 +32324,7 @@
 						{ className: 'todo-main' },
 						this.props.todos.map(function (todo, index) {
 							// {...this.props} 用来传递ToDoList中ToDoContent的todos属性和delete方法。
-							return _react2.default.createElement(ContentItem, _extends({ key: index, text: todo }, _this3.props));
+							return _react2.default.createElement(ContentItem, _extends({ key: index, index: index, text: todo }, _this4.props));
 						})
 						//Each child in an array or iterator should have a unique "key" prop. Check the render method of `ToDoContent`. See https://fb.me/react-warning-keys for more information.
 
@@ -32275,6 +32337,77 @@
 	}(_react2.default.Component);
 
 	exports.default = ToDoContent;
+
+/***/ },
+/* 187 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+		value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(1);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var ToDoFooter = function (_React$Component) {
+		_inherits(ToDoFooter, _React$Component);
+
+		function ToDoFooter(props) {
+			_classCallCheck(this, ToDoFooter);
+
+			var _this = _possibleConstructorReturn(this, (ToDoFooter.__proto__ || Object.getPrototypeOf(ToDoFooter)).call(this, props));
+
+			_this.state = {
+				isAllChecked: true
+			};
+			return _this;
+		}
+
+		_createClass(ToDoFooter, [{
+			key: 'render',
+			value: function render() {
+				return _react2.default.createElement(
+					'div',
+					null,
+					_react2.default.createElement(
+						'label',
+						null,
+						_react2.default.createElement('input', { type: 'checkbox', onChange: this.props.selectAll.bind(this), checked: this.props.isAllChecked }),
+						_react2.default.createElement(
+							'span',
+							null,
+							'\u5DF2\u7ECF\u5B8C\u6210',
+							this.props.doneNum,
+							'/',
+							this.props.allNum
+						),
+						_react2.default.createElement(
+							'button',
+							{ onClick: this.props.deleteAll.bind(this) },
+							'\u5220\u9664\u5168\u90E8'
+						)
+					)
+				);
+			}
+		}]);
+
+		return ToDoFooter;
+	}(_react2.default.Component);
+
+	exports.default = ToDoFooter;
 
 /***/ }
 /******/ ]);
